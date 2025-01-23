@@ -1,0 +1,27 @@
+cat > .github/workflows/main.yml << 'EOF'
+name: DevOps CI/CD
+
+on:
+  push:
+    branches: [ main, staging, develop ]
+  pull_request:
+    branches: [ main, staging, develop ]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - name: Infrastructure Tests
+        run: |
+          cd infrastructure/terraform
+          terraform init -backend=false
+          terraform validate
+
+  security-scan:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - name: Security Scan
+        run: echo "Add security scan steps here"
+EOF
