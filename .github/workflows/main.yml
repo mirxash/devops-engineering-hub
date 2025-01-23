@@ -1,25 +1,49 @@
 name: DevOps CI/CD
 
 on:
-  push:
-    branches: [ main, staging, develop ]
-  pull_request:
-    branches: [ main, staging, develop ]
+ push:
+   branches: [ main, staging, develop ]
+ pull_request:
+   branches: [ main, staging, develop ]
 
 jobs:
-  test:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v3
-      - name: Infrastructure Tests
-        run: |
-          cd infrastructure/terraform
-          terraform init -backend=false
-          terraform validate
+ test:
+   runs-on: ubuntu-latest
+   steps:
+     - uses: actions/checkout@v3
+     - uses: actions/setup-go@v4
+       with:
+         go-version: '1.21'
+     - uses: actions/setup-python@v4
+       with:
+         python-version: '3.11'
+     - uses: actions/setup-node@v3
+       with:
+         node-version: '18'
+     - uses: hashicorp/setup-terraform@v2
+     - uses: azure/setup-kubectl@v3
+     - name: Infrastructure Tests
+       run: |
+         cd infrastructure/terraform
+         terraform init -backend=false
+         terraform validate
 
-  security-scan:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v3
-      - name: Security Scan
-        run: echo "Add security scan steps here"
+ security-scan:
+   runs-on: ubuntu-latest
+   steps:
+     - uses: actions/checkout@v3
+     - uses: aquasecurity/trivy-action@master
+       with:
+         scan-type: 'fs'
+         format: 'table'
+
+ lint:
+   runs-on: ubuntu-latest
+   steps:
+     - uses: actions/checkout@v3
+     - name: Run linters
+       uses: github/super-linter@v5
+       env:
+         VALIDATE_ALL_CODEBASE: false
+         DEFAULT_BRANCH: main
+         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
